@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 300px; font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #fff; color: #1c1e21; overflow: hidden; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .hd { background: linear-gradient(135deg, #1877F2 0%, #0a5fd4 100%); padding: 14px 18px 14px; position: relative; overflow: hidden; }
+  .hd.yt { background: linear-gradient(135deg, #C1272D 0%, #9E1F26 100%); }
+  .hd::before { content:''; position:absolute; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.07); top:-38px; right:-25px; }
+  .hd-main { display: flex; align-items: center; gap: 10px; position: relative; }
+  .hd-icon { width: 36px; height: 36px; background: rgba(255,255,255,.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hd h1 { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+  .hd p { font-size: 10px; color: rgba(255,255,255,.75); margin-top: 2px; white-space: nowrap; }
+  .hd-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+  .mode-switch { display: flex; gap: 4px; }
+  .mode-btn { border: none; cursor: pointer; border-radius: 99px; padding: 3px 8px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,.2); color: #fff; }
+  .mode-btn.active { background: #fff; color: #1877F2; }
+  .hd.yt .mode-btn.active { color: #C1272D; }
+  .hd-gear { width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,.15); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.85); }
+  .hd-gear:hover { background: rgba(255,255,255,.28); }
+  .hd-gear svg { width: 15px; height: 15px; }
+  .auto-card { display: none; align-items: center; gap: 9px; margin-top: 12px; background: rgba(255,255,255,.13); border-radius: 10px; padding: 9px 11px; position: relative; }
+  .auto-card.show { display: flex; }
+  .auto-avatar { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.5); background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .auto-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .auto-right { flex: 1; min-width: 0; overflow: hidden; }
+  .auto-name { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .auto-bot { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+  .auto-url { font-size: 8px; color: rgba(255,255,255,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .page-id { margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-size: 8px; font-weight: 600; background: rgba(255,255,255,.18); color: rgba(255,255,255,.85); border-radius: 4px; padding: 2.5px 6px; cursor: pointer; white-space: nowrap; }
+  .page-id.copied { background: rgba(52,211,153,.5); color: #fff; }
+  .bd { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .section-label { font-size: 10.5px; font-weight: 600; color: #65676b; letter-spacing: .4px; text-transform: uppercase; margin-bottom: 7px; }
+  .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .label-hint { font-size: 9.5px; color: #90949c; }
+  .cnt-ctrl { display: flex; align-items: center; justify-content: space-between; background: #f0f2f5; border-radius: 11px; padding: 3px; gap: 3px; }
+  .cnt-btn { width: 38px; height: 38px; border: none; background: #fff; border-radius: 8px; font-size: 18px; font-weight: 300; cursor: pointer; color: #1877F2; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,.1); flex-shrink: 0; }
+  .cnt-ctrl.yt .cnt-btn { color: #C1272D; }
+  .cnt-display { flex: 1; text-align: center; }
+  .cnt-num { font-size: 26px; font-weight: 800; color: #1877F2; line-height: 1; display: block; }
+  .cnt-ctrl.yt .cnt-num { color: #C1272D; }
+  .cnt-sub { font-size: 9px; color: #90949c; margin-top: 1px; }
+  .quick-btns { display: flex; gap: 5px; }
+  .qbtn { flex: 1; padding: 4px 0; border: 1.5px solid #dce0e6; background: #fff; border-radius: 6px; font-size: 11px; font-weight: 600; color: #65676b; cursor: pointer; text-align: center; }
+  .qbtn.active { border-color: #1877F2; color: #1877F2; background: #e8f0fe; }
+  .quick-btns.yt .qbtn.active { border-color: #C1272D; color: #C1272D; background: #fdecec; }
+  #updateBar { display: none; align-items: center; gap: 8px; background: #fff8e1; border-radius: 8px; padding: 8px 10px; border: 1px solid #ffd966; }
+  #updateBar.show { display: flex; }
+  #updateBar .ub-title { font-size: 11px; font-weight: 700; color: #a56c00; }
+  #updateBar .ub-sub { font-size: 9.5px; color: #b07800; margin-top: 1px; }
+  #updateBar .ub-btn { font-size: 10px; font-weight: 700; color: #fff; background: #e0700a; border-radius: 6px; padding: 4px 10px; flex-shrink: 0; cursor: pointer; border: none; }
+  #statusMsg { display: none; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 500; }
+  #statusMsg.warn { background: #fff8e1; color: #a56c00; display: flex; }
+  #statusMsg.err { background: #fce8e6; color: #c5221f; display: flex; }
+  #statusMsg.ok { background: #e6f4ea; color: #1e7e34; display: flex; }
+  #btnGo { width: 100%; padding: 11px; background: linear-gradient(135deg, #1877F2, #0a5fd4); color: #fff; border: none; border-radius: 11px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(24,119,242,.3); letter-spacing: .3px; }
+  #btnGo.yt { background: linear-gradient(135deg, #C1272D, #9E1F26); box-shadow: 0 4px 14px rgba(193,39,45,.3); }
+  #btnGo:disabled { opacity: .5; cursor: not-allowed; }
+  .ft { padding: 8px 16px 11px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  #ftVersion { font-size: 10px; color: #c0c4cc; font-weight: 600; }
+  #ftVersion.clickable { cursor: pointer; }
+  #ftVersion.clickable:hover { color: #1877F2; }
+  #ftDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: #d1d5db; }
+  #ftDot.ok { background: #34d399; }
+  #ftDot.new { background: #fbbf24; }
+  #ftDot.beta { background: #a78bfa; }
+  .set-hd { background: linear-gradient(135deg, #1877F2 0%, #0a5fd4 100%); padding: 14px 16px 12px; position: relative; overflow: hidden; }
+  .set-hd.yt { background: linear-gradient(135deg, #C1272D 0%, #9E1F26 100%); }
+  .set-hd-row { display: flex; align-items: center; gap: 9px; position: relative; }
+  .set-back { width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,.18); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
+  .set-back svg { width: 14px; height: 14px; }
+  .set-hd-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .set-bd { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 14px; }
+  .set-section-label { font-size: 9.5px; font-weight: 700; color: #65676b; letter-spacing: .6px; text-transform: uppercase; margin-bottom: 7px; }
+  .set-card { background: #f7f8fa; border-radius: 10px; overflow: hidden; border: 0.5px solid #e4e6eb; }
+  .set-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 0.5px solid #e4e6eb; }
+  .set-row:last-child { border-bottom: none; }
+  .set-row-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; line-height: 1; }
+  .set-row-icon.purple { background: #f3e8ff; color: #7c3aed; }
+  .set-row-icon.red { background: #fdecec; color: #C1272D; }
+  .set-row-icon.gray { background: #f0f2f5; color: #65676b; }
+  .set-row-body { flex: 1; min-width: 0; }
+  .set-row-name { font-size: 12px; font-weight: 600; color: #1c1e21; }
+  .set-forced-on { font-size: 9px; font-weight: 700; color: #1e7e34; background: #e6f4ea; border-radius: 99px; padding: 3px 9px; flex-shrink: 0; white-space: nowrap; }
+  .tog { width: 34px; height: 20px; border-radius: 10px; background: #d1d5db; border: none; cursor: pointer; position: relative; flex-shrink: 0; }
+  .tog.on { background: #1877F2; }
+  .tog.on.red { background: #C1272D; }
+  .tog::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .tog.on::after { transform: translateX(14px); }
+  .set-ft { padding: 7px 14px 12px; text-align: center; font-size: 10px; color: #c0c4cc; }
+</style>
+</head>
+<body>
+<div class="page active" id="pageMain">
+<div class="hd" id="hdMain">
+  <div class="hd-main">
+    <div class="hd-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="2" y="4" width="3" height="12" rx="1.5" fill="white"/>
+        <rect x="7" y="2" width="3" height="16" rx="1.5" fill="white" opacity="0.85"/>
+        <rect x="12" y="5" width="3" height="10" rx="1.5" fill="white" opacity="0.7"/>
+        <rect x="17" y="3" width="3" height="14" rx="1.5" fill="white" opacity="0.55"/>
+      </svg>
+    </div>
+    <div>
+      <h1>多平台批量打开助手</h1>
+      <p>打开上传页，批量打开</p>
+    </div>
+    <div class="hd-right">
+      <div class="mode-switch">
+        <button type="button" class="mode-btn active" id="modeFb">FB</button>
+        <button type="button" class="mode-btn" id="modeYt">YT</button>
+      </div>
+      <button type="button" class="hd-gear" id="btnGear" title="偏好设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="auto-card" id="autoCard">
+    <div class="auto-avatar" id="autoAvatar"></div>
+    <div class="auto-right">
+      <div class="auto-name">公共主页编号</div>
+      <div class="auto-bot">
+        <span class="auto-url" id="autoUrl"></span>
+        <span class="page-id" id="autoPageId"><span class="page-id-text">复制</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="bd">
+  <div id="updateBar">
+    <div class="ub-text"><div class="ub-title" id="updateTitle">发现新版本</div><div class="ub-sub">点击前往 GitHub 下载更新</div></div>
+    <button type="button" class="ub-btn" id="updateGoBtn">更新</button>
+  </div>
+  <div>
+    <div class="label-row"><div class="section-label">打开数量</div><span class="label-hint">最多 30 个</span></div>
+    <div class="cnt-ctrl" id="cntCtrl">
+      <button type="button" class="cnt-btn" id="btnMinus">−</button>
+      <div class="cnt-display"><span class="cnt-num" id="numDisplay">5</span><div class="cnt-sub">个标签页</div></div>
+      <button type="button" class="cnt-btn" id="btnPlus">＋</button>
+    </div>
+    <div class="quick-btns" id="quickBtns" style="margin-top:7px;">
+      <button type="button" class="qbtn" data-n="3">3</button>
+      <button type="button" class="qbtn" data-n="5">5</button>
+      <button type="button" class="qbtn" data-n="8">8</button>
+      <button type="button" class="qbtn" data-n="10">10</button>
+      <button type="button" class="qbtn" data-n="15">15</button>
+    </div>
+  </div>
+  <div id="statusMsg"></div>
+  <button type="button" id="btnGo">快速批量打开</button>
+</div>
+<div class="ft"><span id="ftVersion">v5.0</span><span id="ftDot" title="正在检测更新…"></span></div>
+</div>
+
+<div class="page" id="pageSettings">
+<div class="set-hd" id="setHd">
+  <div class="set-hd-row">
+    <button type="button" class="set-back" id="btnBack" title="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div><div class="set-hd-title">偏好设置</div></div>
+  </div>
+</div>
+<div class="set-bd">
+  <div>
+    <div class="set-section-label">前置任务</div>
+    <div class="set-card">
+      <div class="set-row">
+        <div class="set-row-icon purple">▦</div>
+        <div class="set-row-body"><div class="set-row-name">FB 自动打开日程本</div></div>
+        <button type="button" class="tog on" id="togCalendarFb" aria-label="开关"></button>
+      </div>
+      <div class="set-row">
+        <div class="set-row-icon red">▶</div>
+        <div class="set-row-body"><div class="set-row-name">YT 自动打开已排期内容</div></div>
+        <button type="button" class="tog on red" id="togCalendarYt" aria-label="开关"></button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="set-section-label">更新与通知</div>
+    <div class="set-card">
+      <div class="set-row">
+        <div class="set-row-icon gray">↻</div>
+        <div class="set-row-body"><div class="set-row-name">启动时检测更新</div></div>
+        <span class="set-forced-on">已开启</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="set-ft" id="setFt">v5.0</div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
